@@ -1,5 +1,4 @@
 import praw
-import re
 import os
 
 #HYPER_PARAMETERS
