@@ -1,5 +1,6 @@
 import praw
 import os
+import textwrap
 
 #HYPER_PARAMETERS
 POSTS_NUMBERS_PER_QUERY = 17
@@ -27,21 +28,37 @@ reddit = praw.Reddit(
     # username
     #password  
 )
+def wrap_text(text, width=80, initial_indent='', subsequent_indent=''):
+    """Has the text wrapping for better readability
+
+    Args:
+        text (string): text file to wrap
+        width (int, optional): Length of line in characters. Defaults to 80.
+        initial_indent (str, optional): initial indent for text. Defaults to ''.
+        subsequent_indent (str, optional): subsequent indent for text (used for nested comments). Defaults to ''.
+
+    Returns:
+        _type_: _description_
+    """
+    wrapper = textwrap.TextWrapper(width=width, initial_indent=initial_indent, subsequent_indent=subsequent_indent)
+    return wrapper.fill(text)
 
 #recusive function to include all comments recursively
-def write_comment(comment, file, level = 0):
+def write_comment(comment, f, width = 110,indent = "    "):
     """Writes the comment and all its replies to the 
     represents the nested level of the comment by the level of indentation
 
     Args:
         comment (reddit.comment): The comment to retrieved from the reddit API
-        file (.txt): The file the comment will be written to
-        level (int, optional): level of nestedness for the replies: Defaults to 0.
+        f (.txt): The file the comment will be written to
+        width (int, optional): the length of line in characters
+        indent(string, optional): the inital indent for nested comments
     """
-    indent = '  ' * level # to represent level of nesting of the comment
-    file.write(f"{indent} Comment by {comment.author}: {comment.body} \n")
+    f.write(f"comment by {comment.author}: \n")
+    f.write(f"{wrap_text(comment.body)} \n \n")
     for reply in comment.replies:
-        write_comment(reply, file, level + 1)
+        f.write(f"{indent} Reply by {reply.author}: \n")
+        f.write(wrap_text(reply.body, width= width,initial_indent = indent, subsequent_indent = indent) + "\n\n")
     
 def scraper(subreddit_name, search_queries, base_dir):
     """Scrapes the subreddit chosen based on the search queries provided and writes the posts and the top 3 comments as a file 
@@ -64,9 +81,9 @@ def scraper(subreddit_name, search_queries, base_dir):
         for i, submission in enumerate(subreddit.search(query, limit = POSTS_NUMBERS_PER_QUERY)):
             filename = os.path.join(query_dir,f"post_{i+1}.txt")
             with open(filename, 'w', encoding='UTF-8') as f:
-                f.write(f"Title: {submission.title} \n ")
-                f.write(f"URL: {submission.url} \n")
-                f.write(f"OP entry: \n {submission.selftext} \n")
+                f.write(f"Title: {submission.title} \n \n")
+                f.write(f"URL: {submission.url} \n \n")
+                f.write(f"OP entry: \n {wrap_text(submission.selftext)} \n\n")
                 
                 #getting comments
                 submission.comments.replace_more(limit = None)
@@ -80,3 +97,11 @@ def scraper(subreddit_name, search_queries, base_dir):
 
 if __name__ == "__main__":
    scraper(SUBREDDIT,QUERIES,DISC_DIR)
+
+
+   
+
+#recusive function to include all comments recursively
+
+    
+
